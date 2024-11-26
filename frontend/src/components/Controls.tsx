@@ -1,11 +1,10 @@
-import { log } from "console";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const Controls: React.FC = () => {
-  const [ws, setWs] = useState<WebSocket | null>(null); // Store WebSocket in state
-  const [isConnected, setIsConnected] = useState<boolean>(false); // Connection status
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize WebSocket connection once when the component mounts
   useEffect(() => {
     const websocket = new WebSocket("ws://0.0.0.0:8765");
 
@@ -24,17 +23,33 @@ const Controls: React.FC = () => {
       setIsConnected(false);
     };
 
-    setWs(websocket); // Save the WebSocket instance in state
+    setWs(websocket);
 
-    // Cleanup the WebSocket when the component unmounts
     return () => {
       if (websocket) {
         websocket.close();
       }
     };
-  }, []); // Empty dependency array ensures this runs only once when the component mounts
+  }, []);
 
-  // Send a command to the robot
+  const startSendingCommand = (linear: number, angular: number) => {
+    if (ws && isConnected) {
+      sendCommand(linear, angular);
+
+      intervalRef.current = setInterval(() => {
+        sendCommand(linear, angular);
+      }, 100);
+    }
+  };
+
+  const stopSendingCommand = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+
+      sendCommand(0, 0);
+    }
+  };
 
   const sendCommand = (linear: number, angular: number) => {
     if (ws && isConnected) {
@@ -60,10 +75,34 @@ const Controls: React.FC = () => {
 
   return (
     <div>
-      <button onClick={() => sendCommand(0.5, 0)}>Forward</button>
-      <button onClick={() => sendCommand(-0.5, 0)}>Backward</button>
-      <button onClick={() => sendCommand(0, 0.5)}>Turn Left</button>
-      <button onClick={() => sendCommand(0, -0.5)}>Turn Right</button>
+      <button
+        onMouseDown={() => startSendingCommand(0.5, 0)}
+        onMouseUp={stopSendingCommand}
+        onMouseLeave={stopSendingCommand}
+      >
+        Forward
+      </button>
+      <button
+        onMouseDown={() => startSendingCommand(-0.5, 0)}
+        onMouseUp={stopSendingCommand}
+        onMouseLeave={stopSendingCommand}
+      >
+        Backward
+      </button>
+      <button
+        onMouseDown={() => startSendingCommand(0, 0.5)}
+        onMouseUp={stopSendingCommand}
+        onMouseLeave={stopSendingCommand}
+      >
+        Turn Left
+      </button>
+      <button
+        onMouseDown={() => startSendingCommand(0, -0.5)}
+        onMouseUp={stopSendingCommand}
+        onMouseLeave={stopSendingCommand}
+      >
+        Turn Right
+      </button>
       <p>{isConnected ? "Connected to WebSocket" : "Disconnected"}</p>
     </div>
   );
