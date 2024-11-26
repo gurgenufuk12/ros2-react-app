@@ -29,7 +29,6 @@ class ROSBridge(Node):
     def publish_cmd_vel(self, linear, angular):
         twist = Twist()
         try:
-            # Explicitly convert to float
             twist.linear.x = float(linear['x'])
             twist.linear.y = float(linear['y'])
             twist.linear.z = float(linear['z'])

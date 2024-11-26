@@ -14,10 +14,9 @@ class WebSocketManager:
         """
         WebSocket bağlantısı üzerinden gelen mesajları işle.
         """
-      
+
         try:
             async for message in websocket:
-                print("message",message)
                 try:
                     data = json.loads(message)
                 except json.JSONDecodeError:
@@ -26,7 +25,6 @@ class WebSocketManager:
                     await websocket.send(json.dumps({"error": "Invalid JSON format"}))
                     continue
 
-                # Process command types
                 if data.get("type") == "cmd_vel":
                     logger.info("Received cmd_vel message: %s", data)
                     self.ros_bridge.publish_cmd_vel(
