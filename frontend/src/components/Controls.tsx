@@ -41,7 +41,8 @@ const Controls: React.FC = () => {
       }, 100);
     }
   };
-
+  console.log("intervalRef", intervalRef);
+  
   const stopSendingCommand = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
