@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Joystick } from "react-joystick-component";
-
+import "../styles/Controls.css";
 const Controls: React.FC = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -91,7 +91,7 @@ const Controls: React.FC = () => {
   };
 
   return (
-    <div style={{ textAlign: "center",justifyItems:"center" }}>
+    <div className="controls-container">
       <Joystick
         size={250}
         baseColor="#EEEEEE"

@@ -1,38 +1,23 @@
-.App {
-  text-align: center;
+/* App.css */
+.app-container {
+  display: flex;
+  height: 100vh; /* Full viewport height */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.left-pane, .right-pane {
+  flex: 1; /* Each pane takes up equal space */
+  overflow: auto; /* Add scroll if content overflows */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Optional: Add a border between panes */
+.left-pane {
+  border-right: 1px solid #ccc;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Center content in controls pane */
+.right-pane {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
