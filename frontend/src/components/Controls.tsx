@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Joystick } from "react-joystick-component";
 
 const Controls: React.FC = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const linearVelocityRef = useRef(0);
+  const angularVelocityRef = useRef(0);
 
   useEffect(() => {
-    const websocket = new WebSocket("ws://0.0.0.0:8765");
+    const websocket = new WebSocket("ws://172.16.66.124:8765");
 
     websocket.onopen = () => {
       console.log("WebSocket connected!");
@@ -26,30 +29,43 @@ const Controls: React.FC = () => {
     setWs(websocket);
 
     return () => {
-      if (websocket) {
-        websocket.close();
-      }
+      websocket.close();
     };
   }, []);
 
-  const startSendingCommand = (linear: number, angular: number) => {
+  const startSendingCommand = () => {
     if (ws && isConnected) {
-      sendCommand(linear, angular);
-
       intervalRef.current = setInterval(() => {
-        sendCommand(linear, angular);
+        sendCommand(linearVelocityRef.current, angularVelocityRef.current);
       }, 100);
     }
   };
-  console.log("intervalRef", intervalRef);
-  
+
   const stopSendingCommand = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
-
-      sendCommand(0, 0);
     }
+    sendCommand(0, 0);
+  };
+
+  const handleMove = (event: any) => {
+    const { x, y } = event;
+    const maxSpeed = 1;
+    const linear = (y / 2) * maxSpeed;
+    const angular = (-x / 2) * maxSpeed;
+    linearVelocityRef.current = parseFloat(linear.toFixed(2));
+    angularVelocityRef.current = parseFloat(angular.toFixed(2));
+  };
+
+  const handleStart = () => {
+    startSendingCommand();
+  };
+
+  const handleStop = () => {
+    linearVelocityRef.current = 0;
+    angularVelocityRef.current = 0;
+    stopSendingCommand();
   };
 
   const sendCommand = (linear: number, angular: number) => {
@@ -57,14 +73,14 @@ const Controls: React.FC = () => {
       const message = {
         type: "cmd_vel",
         linear: {
-          x: parseFloat(linear.toFixed(2)),
+          x: linear,
           y: 0.0,
           z: 0.0,
         },
         angular: {
           x: 0.0,
           y: 0.0,
-          z: parseFloat(angular.toFixed(2)),
+          z: angular,
         },
       };
       ws.send(JSON.stringify(message));
@@ -75,35 +91,15 @@ const Controls: React.FC = () => {
   };
 
   return (
-    <div>
-      <button
-        onMouseDown={() => startSendingCommand(0.5, 0)}
-        onMouseUp={stopSendingCommand}
-        onMouseLeave={stopSendingCommand}
-      >
-        Forward
-      </button>
-      <button
-        onMouseDown={() => startSendingCommand(-0.5, 0)}
-        onMouseUp={stopSendingCommand}
-        onMouseLeave={stopSendingCommand}
-      >
-        Backward
-      </button>
-      <button
-        onMouseDown={() => startSendingCommand(0, 0.5)}
-        onMouseUp={stopSendingCommand}
-        onMouseLeave={stopSendingCommand}
-      >
-        Turn Left
-      </button>
-      <button
-        onMouseDown={() => startSendingCommand(0, -0.5)}
-        onMouseUp={stopSendingCommand}
-        onMouseLeave={stopSendingCommand}
-      >
-        Turn Right
-      </button>
+    <div style={{ textAlign: "center",justifyItems:"center" }}>
+      <Joystick
+        size={250}
+        baseColor="#EEEEEE"
+        stickColor="#BBBBBB"
+        move={handleMove}
+        start={handleStart}
+        stop={handleStop}
+      />
       <p>{isConnected ? "Connected to WebSocket" : "Disconnected"}</p>
     </div>
   );
