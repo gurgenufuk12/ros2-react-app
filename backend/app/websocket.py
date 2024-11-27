@@ -20,7 +20,6 @@ class WebSocketManager:
                 try:
                     data = json.loads(message)
                 except json.JSONDecodeError:
-                    print("json.JSONDecodeError")
                     logger.error("Failed to decode message: %s", message)
                     await websocket.send(json.dumps({"error": "Invalid JSON format"}))
                     continue
@@ -31,12 +30,32 @@ class WebSocketManager:
                         data.get("linear"), data.get("angular"))
 
                 elif data.get("type") == "get_map":
-                    logger.info("Received get_map request")
-                    map_data = await self.ros_bridge.get_map_data()
-                    response = json.dumps(
-                        {"type": "map_data", "data": map_data})
-                    await websocket.send(response)
+                    print("get_map")
+                    map_data = self.ros_bridge.get_map_data()
 
+                    if map_data is not None:
+                        response = {
+                            "type": "map_data",
+                            "data": map_data
+                        }
+                        await websocket.send(json.dumps(response))
+                    else:
+                        print("Map data not available")
+                        await websocket.send(json.dumps({"error": "Map data not available"}))
+
+                elif data.get("type") == "get_pose":
+                    print("get_pose")
+                    pose_data = self.ros_bridge.get_pose_data()
+
+                    if pose_data is not None:
+                        response = {
+                            "type": "pose_data",
+                            "data": pose_data
+                        }
+                        await websocket.send(json.dumps(response))
+                    else:
+                        print("Pose data not available")
+                        await websocket.send(json.dumps({"error": "Pose data not available"}))
                 else:
                     logger.warning("Unknown message type: %s",
                                    data.get("type"))
