@@ -22,35 +22,39 @@ const Map: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://172.16.66.124:8765");
+    const ws = new WebSocket("ws://10.34.112.152:8765"); // IP OF YOUR COMPUTER
 
     ws.onopen = () => {
       console.log("WebSocket connected!");
       setLoading(true);
+      console.log("sending get_map");
       ws.send(JSON.stringify({ type: "get_map" }));
-      ws.send(JSON.stringify({ type: "get_pose" }));
+      console.log("sending subscribe_pose");
+      ws.send(JSON.stringify({ type: "subscribe_pose" }));
     };
-    // INFO: The WebSocket object has a number of event listeners that can be used to handle different events.
+
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        if (message.type === "map_data") {
-          console.log("mmmmmmmmmmmmmmmmmmmmmmm");
+        console.log("Received message type:", message.type);
+        console.log("Full message:", message);
 
-          setMapData(message.data);
-          setLoading(false);
+        switch (message.type) {
+          case "map_data":
+            console.log("Setting map data");
+            setMapData(message.data);
+            setLoading(false);
+            break;
+          case "pose_data":
+            console.log("Setting pose data:", message.data);
+            setRobotPose(message.data);
+            break;
+          default:
+            console.warn("Unknown message type:", message.type);
         }
-        if (message.type === "pose_data") {
-          console.log("pppppppppppppppppppppppppppppp");
-
-          setRobotPose(message.data);
-        } else if (message.error) {
-          setError(message.error);
-          setLoading(false);
-        }
-      } catch (e) {
-        setError("Failed to parse data");
-        setLoading(false);
+      } catch (error) {
+        console.error("Error processing message:", error);
+        setError("Failed to process message");
       }
     };
 
@@ -72,7 +76,6 @@ const Map: React.FC = () => {
       }
     };
   }, []);
-  console.log(robotPose);
 
   if (loading) {
     return <div className="map-container">Loading map data...</div>;
