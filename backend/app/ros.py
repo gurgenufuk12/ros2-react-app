@@ -93,9 +93,7 @@ class ROSBridge(Node):
         logger.info(f"Published cmd_vel: {twist}")
 
     def get_map_data(self):
-        print("getting map data")
         return self.map_data
 
     def get_pose_data(self):
-        print("getting pose data")
         return self.pose_data
