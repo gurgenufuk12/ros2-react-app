@@ -1,18 +1,12 @@
 import React from "react";
-import Map from "./components/Map";
-import Controls from "./components/Controls";
-import "./App.css";
+import Dashboard from "./Dashboard";
+import { WebSocketProvider } from "./contexts/WebSocketContext";
 
 const App: React.FC = () => {
   return (
-    <div className="app-container">
-      <div className="left-pane">
-        <Map />
-      </div>
-      <div className="right-pane">
-        <Controls />
-      </div>
-    </div>
+    <WebSocketProvider>
+      <Dashboard />
+    </WebSocketProvider>
   );
 };
 

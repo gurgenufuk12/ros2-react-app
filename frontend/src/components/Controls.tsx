@@ -1,37 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useWebSocket } from "../contexts/WebSocketContext";
 import { Joystick } from "react-joystick-component";
 import "../styles/Controls.css";
 const Controls: React.FC = () => {
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { ws, isConnected } = useWebSocket();
   const linearVelocityRef = useRef(0);
   const angularVelocityRef = useRef(0);
-
-  useEffect(() => {
-    const websocket = new WebSocket("ws://172.16.66.124:8765");
-
-    websocket.onopen = () => {
-      console.log("WebSocket connected!");
-      setIsConnected(true);
-    };
-
-    websocket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      setIsConnected(false);
-    };
-
-    websocket.onclose = () => {
-      console.log("WebSocket closed");
-      setIsConnected(false);
-    };
-
-    setWs(websocket);
-
-    return () => {
-      websocket.close();
-    };
-  }, []);
 
   const startSendingCommand = () => {
     if (ws && isConnected) {
