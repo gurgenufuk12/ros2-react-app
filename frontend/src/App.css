@@ -4,7 +4,8 @@
   height: 100vh; /* Full viewport height */
 }
 
-.left-pane, .right-pane {
+.left-pane,
+.right-pane {
   flex: 1; /* Each pane takes up equal space */
   overflow: auto; /* Add scroll if content overflows */
 }
@@ -19,5 +20,4 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-}
+} 

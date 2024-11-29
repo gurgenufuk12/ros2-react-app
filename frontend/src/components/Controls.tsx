@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import TopicViewer from "./TopicViewer";
 import { Joystick } from "react-joystick-component";
 import "../styles/Controls.css";
 const Controls: React.FC = () => {
@@ -7,6 +8,8 @@ const Controls: React.FC = () => {
   const { ws, isConnected } = useWebSocket();
   const linearVelocityRef = useRef(0);
   const angularVelocityRef = useRef(0);
+  const [linearVelocity, setLinearVelocity] = useState(0);
+  const [angularVelocity, setAngularVelocity] = useState(0);
 
   const startSendingCommand = () => {
     if (ws && isConnected) {
@@ -22,6 +25,8 @@ const Controls: React.FC = () => {
       intervalRef.current = null;
     }
     sendCommand(0, 0);
+    setAngularVelocity(0);
+    setLinearVelocity(0);
   };
 
   const handleMove = (event: any) => {
@@ -29,8 +34,11 @@ const Controls: React.FC = () => {
     const maxSpeed = 1;
     const linear = (y / 2) * maxSpeed;
     const angular = (-x / 2) * maxSpeed;
+
     linearVelocityRef.current = parseFloat(linear.toFixed(2));
     angularVelocityRef.current = parseFloat(angular.toFixed(2));
+    setLinearVelocity(linearVelocityRef.current);
+    setAngularVelocity(angularVelocityRef.current);
   };
 
   const handleStart = () => {
@@ -67,6 +75,9 @@ const Controls: React.FC = () => {
 
   return (
     <div className="controls-container">
+      <span>Lineer Velocity :{linearVelocity}</span>
+      <span>Angular Velocity :{angularVelocity}</span>
+
       <Joystick
         size={250}
         baseColor="#EEEEEE"
@@ -76,6 +87,7 @@ const Controls: React.FC = () => {
         stop={handleStop}
       />
       <p>{isConnected ? "Connected to WebSocket" : "Disconnected"}</p>
+      <TopicViewer />
     </div>
   );
 };

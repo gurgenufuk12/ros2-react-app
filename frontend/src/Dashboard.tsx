@@ -1,6 +1,7 @@
 import React from "react";
 import Map from "./components/Map";
 import Controls from "./components/Controls";
+// import TopicViewer from "./components/TopicViewer";
 import "./App.css";
 
 const App: React.FC = () => {
@@ -11,6 +12,7 @@ const App: React.FC = () => {
       </div>
       <div className="right-pane">
         <Controls />
+        {/* <TopicViewer /> */}
       </div>
     </div>
   );

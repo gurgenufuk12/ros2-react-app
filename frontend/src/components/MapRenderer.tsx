@@ -48,7 +48,6 @@ const MapRenderer: React.FC<MapRendererProps> = ({ mapData, robotPose }) => {
       </group>
     );
   };
-  console.log(robotPose);
 
   const GridCells = () => {
     const cells = [];

@@ -16,13 +16,8 @@ interface MapData {
 }
 
 const Map: React.FC = () => {
-  const {
-    ws,
-    isConnected,
-    sendMessage,
-    addMessageHandler,
-    removeMessageHandler,
-  } = useWebSocket();
+  const { isConnected, sendMessage, addMessageHandler, removeMessageHandler } =
+    useWebSocket();
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [robotPose, setRobotPose] = useState<Pose | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -46,7 +41,7 @@ const Map: React.FC = () => {
   if (loading) {
     return <div className="map-container">Loading map data...</div>;
   }
-  console.log("mapData", mapData);
+  // console.log("mapData", mapData);
 
   if (error) {
     return <div className="map-container">Error: {error}</div>;
