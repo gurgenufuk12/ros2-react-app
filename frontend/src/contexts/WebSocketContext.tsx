@@ -47,7 +47,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   useEffect(() => {
-    const websocket = new WebSocket("ws://10.34.112.152:8765");
+    const websocket = new WebSocket("ws://172.16.66.124:8765");
 
     websocket.onopen = () => {
       console.log("WebSocket connected");
@@ -57,10 +57,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     websocket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        console.log("Received message:", message);
+        // console.log("Received message:", message);
 
         if (message.type && messageHandlersRef.current[message.type]) {
-          console.log("Handling message type:", message.type);
+          // console.log("Handling message type:", message.type);
           messageHandlersRef.current[message.type](message.data);
         }
       } catch (error) {
