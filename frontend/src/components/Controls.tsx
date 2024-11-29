@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
-import TopicViewer from "./TopicViewer";
 import { Joystick } from "react-joystick-component";
 import "../styles/Controls.css";
 const Controls: React.FC = () => {
@@ -87,7 +86,6 @@ const Controls: React.FC = () => {
         stop={handleStop}
       />
       <p>{isConnected ? "Connected to WebSocket" : "Disconnected"}</p>
-      <TopicViewer />
     </div>
   );
 };
