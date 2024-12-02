@@ -32,6 +32,8 @@ class ROSBridge(Node):
         )
         self.map_data = None
         self.pose_data = None
+        self.topic_list = None
+
         print(f"ROSBridge initialized, waiting for map data...")
 
     def map_callback(self, msg):
@@ -97,3 +99,12 @@ class ROSBridge(Node):
 
     def get_pose_data(self):
         return self.pose_data
+
+    def get_topic_list(self):
+        self.topic_list = []
+        for name, types in self.get_topic_names_and_types():
+            self.topic_list.append({
+                "name": name,
+                "type": types[0]
+            })
+        return self.topic_list

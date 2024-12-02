@@ -75,6 +75,14 @@ class WebSocketManager:
             if not self.pose_subscribers and self.update_pose_task:
                 self.update_pose_task.cancel()
                 self.update_pose_task = None
+                
+        elif msg_type == "get_topics":
+            topics = self.ros_bridge.get_topic_list()
+            response = {
+                "type": "topic_list",
+                "data": topics
+            }
+            await websocket.send(json.dumps(response))
         else:
             logger.warning("Unknown message type: %s", msg_type)
 
@@ -108,7 +116,7 @@ class WebSocketManager:
 
         for ws in self.pose_subscribers.copy():
             try:
-                await asyncio.sleep(0.5) 
+                await asyncio.sleep(0.5)
                 await ws.send(message)
                 logger.debug("Pose data sent successfully")
             except Exception as e:
