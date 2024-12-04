@@ -14,7 +14,7 @@ const Controls: React.FC = () => {
     if (ws && isConnected) {
       intervalRef.current = setInterval(() => {
         sendCommand(linearVelocityRef.current, angularVelocityRef.current);
-      }, 100);
+      }, 1);
     }
   };
 
