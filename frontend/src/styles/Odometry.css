@@ -1,4 +1,44 @@
-.pre {
-  display: flex;
-  flex-direction: column;
-}
+/* styles/OdomListener.css */
+.odom-window {
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .odom-history {
+    overflow-y: auto;
+    padding: 10px;
+    scroll-behavior: smooth;
+    max-height: 700px
+  }
+  
+  .odom-entry {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+  
+  .odom-data {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  
+  .odom-data h4 {
+    color: #666;
+    margin-bottom: 10px;
+  }
+  
+  .odom-data p {
+    margin: 5px 0;
+    font-family: monospace;
+  }
+  
+  hr {
+    border: 0;
+    height: 1px;
+    background: #eee;
+    margin: 15px 0;
+  }

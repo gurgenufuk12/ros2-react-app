@@ -30,7 +30,7 @@ export const microApps: MicroApp[] = [
     title: "Odom Listener",
     icon: SmartToyIcon,
     width: 500,
-    height: 1000,
+    height: 900,
     component: OdomListener,
   },
   {
