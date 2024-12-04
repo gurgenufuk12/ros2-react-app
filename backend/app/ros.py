@@ -1,10 +1,11 @@
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist, PoseWithCovarianceStamped
+from geometry_msgs.msg import Twist, PoseWithCovarianceStamped, TwistStamped
 from nav_msgs.msg import OccupancyGrid, Odometry
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 import json
 import logging
+# from rosidl_runtime_py import message_to_ordereddict
 logger = logging.getLogger(__name__)
 
 
@@ -17,7 +18,11 @@ class ROSBridge(Node):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
-        self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.cmd_vel_publisher = self.create_publisher(
+            TwistStamped,
+            '/cmd_vel',
+            10
+        )
         self.map_subscription = self.create_subscription(
             OccupancyGrid,
             '/map',
@@ -86,20 +91,21 @@ class ROSBridge(Node):
         }
 
     def publish_cmd_vel(self, linear, angular):
-        twist = Twist()
-        try:
-            twist.linear.x = float(linear['x'])
-            twist.linear.y = float(linear['y'])
-            twist.linear.z = float(linear['z'])
-            twist.angular.x = float(angular['x'])
-            twist.angular.y = float(angular['y'])
-            twist.angular.z = float(angular['z'])
-        except (KeyError, TypeError, ValueError) as e:
-            logger.error(f"Invalid data format: {e}")
-            return
+        twist_stamped = TwistStamped()
 
-        self.cmd_vel_publisher.publish(twist)
-        logger.info(f"Published cmd_vel: {twist}")
+        twist_stamped.header.stamp = self.get_clock().now().to_msg()
+        twist_stamped.header.frame_id = "base_link"
+
+        twist_stamped.twist.linear.x = float(linear.get('x', 0.0))
+        twist_stamped.twist.linear.y = float(linear.get('y', 0.0))
+        twist_stamped.twist.linear.z = float(linear.get('z', 0.0))
+
+        twist_stamped.twist.angular.x = float(angular.get('x', 0.0))
+        twist_stamped.twist.angular.y = float(angular.get('y', 0.0))
+        twist_stamped.twist.angular.z = float(angular.get('z', 0.0))
+
+        self.cmd_vel_publisher.publish(twist_stamped)
+        logger.info(f"Published TwistStamped: {twist_stamped}")
 
     def odom_callback(self, msg):
         self.odom_data = {
