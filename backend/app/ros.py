@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist, PoseWithCovarianceStamped
-from nav_msgs.msg import OccupancyGrid
+from nav_msgs.msg import OccupancyGrid, Odometry
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 import json
 import logging
@@ -30,6 +30,13 @@ class ROSBridge(Node):
             self.amcl_callback,
             qos_profile=qos
         )
+        self.odom_message = self.create_subscription(
+            Odometry,
+            '/odom',
+            self.odom_callback,
+            10
+        )
+        self.odom_data = None
         self.map_data = None
         self.pose_data = None
         self.topic_list = None
@@ -93,6 +100,40 @@ class ROSBridge(Node):
 
         self.cmd_vel_publisher.publish(twist)
         logger.info(f"Published cmd_vel: {twist}")
+
+    def odom_callback(self, msg):
+        self.odom_data = {
+            "pose": {
+                "position": {
+                    "x": msg.pose.pose.position.x,
+                    "y": msg.pose.pose.position.y,
+                    "z": msg.pose.pose.position.z,
+                },
+                "orientation": {
+                    "x": msg.pose.pose.orientation.x,
+                    "y": msg.pose.pose.orientation.y,
+                    "z": msg.pose.pose.orientation.z,
+                    "w": msg.pose.pose.orientation.w,
+                },
+            },
+            "covariance": list(msg.pose.covariance),
+            "twist": {
+                "linear": {
+                    "x": msg.twist.twist.linear.x,
+                    "y": msg.twist.twist.linear.y,
+                    "z": msg.twist.twist.linear.z,
+                },
+                "angular": {
+                    "x": msg.twist.twist.angular.x,
+                    "y": msg.twist.twist.angular.y,
+                    "z": msg.twist.twist.angular.z,
+                },
+            },
+            "covariance": list(msg.pose.covariance),
+        }
+
+    def get_odom_data(self):
+        return self.odom_data
 
     def get_map_data(self):
         return self.map_data

@@ -12,8 +12,10 @@ class WebSocketManager:
     def __init__(self, ros_bridge):
         self.connected = set()
         self.pose_subscribers = set()
+        self.odom_subscribers = set()
         self.ros_bridge = ros_bridge
         self.update_pose_task = None
+        self.update_odom_task = None
 
     async def handler(self, websocket: WebSocketServerProtocol):
         # Register client
@@ -75,7 +77,7 @@ class WebSocketManager:
             if not self.pose_subscribers and self.update_pose_task:
                 self.update_pose_task.cancel()
                 self.update_pose_task = None
-                
+
         elif msg_type == "get_topics":
             topics = self.ros_bridge.get_topic_list()
             response = {
@@ -83,6 +85,17 @@ class WebSocketManager:
                 "data": topics
             }
             await websocket.send(json.dumps(response))
+
+        elif msg_type == "subscribe_odom":
+            self.odom_subscribers.add(websocket)
+            if not self.update_odom_task:
+                self.update_odom_task = asyncio.create_task(self.update_odom())
+        elif msg_type == "unsubscribe_odom":
+            self.odom_subscribers.discard(websocket)
+            if not self.odom_subscribers and self.update_odom_task:
+                self.update_odom_task.cancel()
+                self.update_odom_task = None
+
         else:
             logger.warning("Unknown message type: %s", msg_type)
 
@@ -122,3 +135,29 @@ class WebSocketManager:
             except Exception as e:
                 logger.error(f"Error sending to subscriber: {e}")
                 self.pose_subscribers.remove(ws)
+
+    async def update_odom(self):
+        try:
+            while True:
+                odom_data = self.ros_bridge.get_odom_data()
+                if odom_data:
+                    message = {
+                        "type": "odom_data",
+                        "data": odom_data
+                    }
+                    await self.broadcast_odom(json.dumps(message))
+                await asyncio.sleep(0.1)  # 10Hz update rate
+        except asyncio.CancelledError:
+            logger.info("Odom update task cancelled")
+        except Exception as e:
+            logger.error(f"Error in odom update: {e}")
+
+    async def broadcast_odom(self, message):
+        to_remove = set()
+        for ws in self.odom_subscribers:
+            try:
+                await ws.send(message)
+            except Exception as e:
+                logger.error(f"Error sending odom: {e}")
+                to_remove.add(ws)
+        self.odom_subscribers -= to_remove
