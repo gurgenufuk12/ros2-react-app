@@ -1,17 +1,20 @@
 import rclpy
+import yaml
 from rclpy.node import Node
 from geometry_msgs.msg import Twist, PoseWithCovarianceStamped, TwistStamped
 from nav_msgs.msg import OccupancyGrid, Odometry
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 import json
 import logging
-# from rosidl_runtime_py import message_to_ordereddict
+from rosidl_runtime_py import message_to_ordereddict
 logger = logging.getLogger(__name__)
 
 
 class ROSBridge(Node):
     def __init__(self):
         super().__init__('ros_bridge')
+        self.dynamic_subscribers = {}
+        self.dynamic_data = {}
         qos = QoSProfile(
             reliability=QoSReliabilityPolicy.RELIABLE,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
@@ -23,6 +26,11 @@ class ROSBridge(Node):
             '/cmd_vel',
             10
         )
+        # self.cmd_vel_publisher = self.create_publisher(
+        #     Twist,
+        #     '/cmd_vel',
+        #     10
+        # )
         self.map_subscription = self.create_subscription(
             OccupancyGrid,
             '/map',
@@ -91,6 +99,18 @@ class ROSBridge(Node):
         }
 
     def publish_cmd_vel(self, linear, angular):
+        # twist = Twist()
+
+        # twist.linear.x = float(linear.get('x', 0.0))
+        # twist.linear.y = float(linear.get('y', 0.0))
+        # twist.linear.z = float(linear.get('z', 0.0))
+
+        # twist.angular.x = float(angular.get('x', 0.0))
+        # twist.angular.y = float(angular.get('y', 0.0))
+        # twist.angular.z = float(angular.get('z', 0.0))
+
+        # self.cmd_vel_publisher.publish(twist)
+        # logger.info(f"Published Twist: {twist}")
         twist_stamped = TwistStamped()
 
         twist_stamped.header.stamp = self.get_clock().now().to_msg()
@@ -137,6 +157,35 @@ class ROSBridge(Node):
             },
             "covariance": list(msg.pose.covariance),
         }
+
+    def create_dynamic_subscription(self, topic_name, msg_type):
+        if topic_name in self.dynamic_subscribers:
+            self.destroy_subscription(self.dynamic_subscribers[topic_name])
+            del self.dynamic_subscribers[topic_name]
+            print(f"Removed existing subscription for {topic_name}")
+
+        try:
+            msg_module = __import__(msg_type.split('/')[0] + '.msg',
+                                    fromlist=[msg_type.split('/')[-1]])
+            msg_class = getattr(msg_module, msg_type.split('/')[-1])
+
+            print(f"Creating subscription for {topic_name}")
+            self.dynamic_subscribers[topic_name] = self.create_subscription(
+                msg_class,
+                topic_name,
+                lambda msg: self.dynamic_callback(topic_name, msg),
+                QoSProfile(depth=10)
+            )
+            return True
+        except Exception as e:
+            print(f"Error creating subscription: {e}")
+            return False
+
+    def dynamic_callback(self, topic_name, msg):
+        self.dynamic_data[topic_name] = message_to_ordereddict(msg)
+
+    def get_dynamic_data(self, topic_name):
+        return self.dynamic_data.get(topic_name)
 
     def get_odom_data(self):
         return self.odom_data
