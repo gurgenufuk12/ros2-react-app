@@ -5,29 +5,37 @@ interface Position {
   y: number;
 }
 
-interface WindowState {
-  openWindows: Record<string, Position>;
-  addWindow: (id: string, position: Position) => void;
-  removeWindow: (id: string) => void;
-  updatePosition: (id: string, position: Position) => void;
+interface WindowInstance {
+  id: string;
+  appId: string;
+  position: Position;
 }
 
-export const useWindowStore = create<WindowState>()((set) => ({
-  openWindows: {},
+interface WindowState {
+  openWindows: WindowInstance[];
+  addWindow: (appId: string) => void;
+  removeWindow: (instanceId: string) => void;
+}
 
-  addWindow: (id, position) =>
-    set((state) => ({
-      openWindows: { ...state.openWindows, [id]: position },
-    })),
-
-  removeWindow: (id) =>
+export const useWindowStore = create<WindowState>((set) => ({
+  openWindows: [],
+  addWindow: (appId) =>
     set((state) => {
-      const { [id]: _, ...rest } = state.openWindows;
-      return { openWindows: rest };
+      const instanceId = `${appId}-${Date.now()}`;
+      const offset = state.openWindows.length * 30;
+      return {
+        openWindows: [
+          ...state.openWindows,
+          {
+            id: instanceId,
+            appId,
+            position: { x: 100 + offset, y: 100 + offset },
+          },
+        ],
+      };
     }),
-
-  updatePosition: (id, position) =>
+  removeWindow: (instanceId) =>
     set((state) => ({
-      openWindows: { ...state.openWindows, [id]: position },
+      openWindows: state.openWindows.filter((w) => w.id !== instanceId),
     })),
 }));

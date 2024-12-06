@@ -2,8 +2,8 @@ import React, {
   createContext,
   useContext,
   useEffect,
-  useState,
   useRef,
+  useState,
 } from "react";
 
 interface WebSocketContextType {
@@ -11,7 +11,7 @@ interface WebSocketContextType {
   isConnected: boolean;
   sendMessage: (message: any) => void;
   addMessageHandler: (type: string, handler: (data: any) => void) => void;
-  removeMessageHandler: (type: string) => void;
+  removeMessageHandler: (type: string, handler: (data: any) => void) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -27,7 +27,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const messageHandlersRef = useRef<{ [key: string]: (data: any) => void }>({});
+
+
+  const messageHandlersRef = useRef<{ [key: string]: ((data: any) => void)[] }>(
+    {}
+  );
 
   const sendMessage = (message: any) => {
     if (ws && isConnected) {
@@ -38,40 +42,64 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const addMessageHandler = (type: string, handler: (data: any) => void) => {
     console.log("Adding handler for:", type);
-    messageHandlersRef.current[type] = handler;
+    if (!messageHandlersRef.current[type]) {
+      messageHandlersRef.current[type] = [];
+    }
+    messageHandlersRef.current[type].push(handler);
   };
 
-  const removeMessageHandler = (type: string) => {
+  const removeMessageHandler = (type: string, handler: (data: any) => void) => {
     console.log("Removing handler for:", type);
-    delete messageHandlersRef.current[type];
+    const handlers = messageHandlersRef.current[type];
+    if (handlers) {
+      const index = handlers.indexOf(handler);
+      if (index !== -1) {
+        handlers.splice(index, 1);
+        console.log(`Handler removed for type: ${type}`);
+      } else {
+        console.warn(`Handler not found for type: ${type}`);
+      }
+      if (handlers.length === 0) {
+        delete messageHandlersRef.current[type];
+      }
+    }
   };
 
   useEffect(() => {
-    const websocket = new WebSocket("ws://172.16.66.124:8765");
+    const websocket = new WebSocket("ws://10.120.66.142:8765");
 
     websocket.onopen = () => {
       console.log("WebSocket connected");
+      setWs(websocket);
       setIsConnected(true);
     };
 
     websocket.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        // console.log("Received message:", message);
-
-        if (message.type && messageHandlersRef.current[message.type]) {
-          // console.log("Handling message type:", message.type);
-          messageHandlersRef.current[message.type](message.data);
-        }
-      } catch (error) {
-        console.error("Error handling message:", error);
+      const message = JSON.parse(event.data);
+      // console.log("WebSocket received:", message);
+      const type = message.type;
+      const handlers = messageHandlersRef.current[type];
+      if (handlers) {
+        handlers.forEach((handler) => {
+          try {
+            handler(message);
+          } catch (error) {
+            console.error("Error in message handler:", error);
+          }
+        });
       }
     };
 
-    setWs(websocket);
+    websocket.onclose = () => {
+      console.log("WebSocket disconnected");
+      setIsConnected(false);
+    };
+
+    websocket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
 
     return () => {
-      console.log("Closing WebSocket");
       websocket.close();
     };
   }, []);

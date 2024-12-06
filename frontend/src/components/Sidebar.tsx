@@ -60,10 +60,7 @@ const Sidebar: React.FC = () => {
           <StyledListItem
             key={app.id}
             onClick={() =>
-              addWindow(app.id, {
-                x: Math.random() * 100 + 100,
-                y: Math.random() * 100 + 100,
-              })
+              addWindow(app.id)
             }
           >
             <ListItemIcon sx={{ minWidth: 40 }}>

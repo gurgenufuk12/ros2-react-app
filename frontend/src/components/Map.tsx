@@ -5,14 +5,16 @@ import "../styles/Map.css";
 import { Pose } from "../types/Pose";
 
 interface MapData {
-  width: number;
-  height: number;
-  resolution: number;
-  origin: {
-    position: { x: number; y: number; z: number };
-    orientation: { x: number; y: number; z: number; w: number };
-  };
-  data: number[];
+  data:{
+    width: number;
+    height: number;
+    resolution: number;
+    origin: {
+      position: { x: number; y: number; z: number };
+      orientation: { x: number; y: number; z: number; w: number };
+    };
+    data: number[];
+  }
 }
 
 const Map: React.FC = () => {
@@ -33,11 +35,11 @@ const Map: React.FC = () => {
     }
 
     return () => {
-      removeMessageHandler("map_data");
-      removeMessageHandler("pose_data");
+      removeMessageHandler("map_data", setMapData);
+      removeMessageHandler("pose_data", setRobotPose);
     };
   }, [isConnected]);
-
+  
   if (loading) {
     return <div className="map-container">Loading map data...</div>;
   }
