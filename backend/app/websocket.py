@@ -21,12 +21,10 @@ class WebSocketManager:
         self.update_odom_task = None
 
     async def handler(self, websocket: WebSocketServerProtocol):
-        # Register client
         self.connected.add(websocket)
         try:
             await self.receive_messages(websocket)
         finally:
-            # Unregister client
             self.connected.remove(websocket)
             self.pose_subscribers.discard(websocket)
             if not self.pose_subscribers and self.update_pose_task:
@@ -49,31 +47,44 @@ class WebSocketManager:
         print(f"Received message: {msg_type}")
 
         if msg_type == "subscribe_topic":
-            print("Subscribing to topic")
             topic_name = data.get("topic")
             msg_type = data.get("msg_type")
-            print(topic_name, msg_type)
-            if not topic_name or not msg_type:
+            instance_id = data.get("instanceId")
+
+            print(
+                f"Subscribing instance {instance_id} to topic: {topic_name}")
+
+            if not all([topic_name, msg_type, instance_id]):
                 await websocket.send(json.dumps({
-                    "error": "Missing topic name or message type"
+                    "error": "Missing required fields (topic, msg_type, or instanceId)"
                 }))
                 return
 
             success = self.ros_bridge.create_dynamic_subscription(
                 topic_name, msg_type)
             print(f"Subscription success: {success}")
+
             if success:
                 if topic_name not in self.topic_subscribers:
-                    self.topic_subscribers[topic_name] = set()
+                    self.topic_subscribers[topic_name] = {}
                     self.topic_tasks[topic_name] = asyncio.create_task(
                         self.update_topic(topic_name)
                     )
-                    self.topic_subscribers[topic_name].add(websocket)
-                    logger.info(f"Subscribed to topic: {topic_name}")
-                else:
-                    await websocket.send(json.dumps({
-                        "error": f"Failed to subscribe to topic: {topic_name}"
-                    }))
+
+                self.topic_subscribers[topic_name][instance_id] = websocket
+                print(
+                    f"Subscribed instance {instance_id} to topic: {topic_name}")
+
+                await websocket.send(json.dumps({
+                    "type": "subscribe_success",
+                    "topic": topic_name,
+                    "instanceId": instance_id
+                }))
+            else:
+                await websocket.send(json.dumps({
+                    "error": f"Failed to subscribe to topic: {topic_name}",
+                    "instanceId": instance_id
+                }))
 
         elif msg_type == "cmd_vel":
             self.ros_bridge.publish_cmd_vel(
@@ -130,31 +141,28 @@ class WebSocketManager:
 
         elif msg_type == "unsubscribe_topic":
             topic_name = data.get("topic")
-            print(
-                f"Received unsubscribe request for topic: {topic_name}")
-
+            instance_id = data.get("instanceId")
             if topic_name in self.topic_subscribers:
-                self.topic_subscribers[topic_name].discard(websocket)
-                print(f"Removed subscriber for topic: {topic_name}")
-
-                if not self.topic_subscribers[topic_name]:
-                    if topic_name in self.topic_tasks:
+                if instance_id in self.topic_subscribers[topic_name]:
+                    self.topic_subscribers[topic_name].pop(instance_id)
+                    if not self.topic_subscribers[topic_name]:
                         self.topic_tasks[topic_name].cancel()
-                        await self.topic_tasks[topic_name]
+                        del self.topic_subscribers[topic_name]
                         del self.topic_tasks[topic_name]
-                    del self.topic_subscribers[topic_name]
-                    print(
-                        f"Cleaned up resources for topic: {topic_name}")
-
-                await websocket.send(json.dumps({
-                    "type": "unsubscribe_success",
-                    "topic": topic_name
-                }))
-                print(
-                    f"Sent unsubscribe confirmation for topic: {topic_name}")
+                        print(f"Unsubscribed from topic: {topic_name}")
+                    await websocket.send(json.dumps({
+                        "type": "unsubscribe_success",
+                        "topic": topic_name,
+                        "instanceId": instance_id
+                    }))
+                else:
+                    await websocket.send(json.dumps({
+                        "error": f"Instance {instance_id} not subscribed to topic: {topic_name}"
+                    }))
             else:
-                print(
-                    f"Unsubscribe request for non-existent topic: {topic_name}")
+                await websocket.send(json.dumps({
+                    "error": f"Topic {topic_name} not found"
+                }))
 
     async def update_pose(self):
         logger.info("Pose update task started")
@@ -242,19 +250,33 @@ class WebSocketManager:
             pass
 
     async def broadcast_topic(self, topic_name, message):
-        logger.info(f"Broadcasting to topic: {topic_name}")
+        # print(f"Broadcasting to topic: {topic_name}")
         if topic_name not in self.topic_subscribers:
             return
+        formatted_message = {
+            "type": "topic_data",
+            "topic": topic_name,
+            "data": json.loads(message)
+        }
 
-        for ws in self.topic_subscribers[topic_name].copy():
+        message_json = json.dumps(formatted_message)
+        to_remove = []
+
+        for instance_id, ws in self.topic_subscribers[topic_name].items():
             try:
-                await ws.send(message)
-                logger.info(f"Successfully sent data for topic: {topic_name}")
+                await ws.send(message_json)
+                # print(f"Sent data to instance {instance_id}")
             except Exception as e:
-                logger.error(f"Error sending topic data: {e}")
-                self.topic_subscribers[topic_name].remove(ws)
-                if not self.topic_subscribers[topic_name]:
-                    self.topic_tasks[topic_name].cancel()
-                    del self.topic_subscribers[topic_name]
-                    del self.topic_tasks[topic_name]
-                    logger.info(f"Unsubscribed from topic: {topic_name}")
+                logger.error(f"Error sending to instance {instance_id}: {e}")
+                to_remove.append(instance_id)
+
+        for instance_id in to_remove:
+            del self.topic_subscribers[topic_name][instance_id]
+            print(f"Removed instance {instance_id} from topic {topic_name}")
+
+        if not self.topic_subscribers[topic_name]:
+            if topic_name in self.topic_tasks:
+                self.topic_tasks[topic_name].cancel()
+                del self.topic_tasks[topic_name]
+            del self.topic_subscribers[topic_name]
+            print(f"Removed topic {topic_name} - no subscribers left")

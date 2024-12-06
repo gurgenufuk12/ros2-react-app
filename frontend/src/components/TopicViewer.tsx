@@ -15,9 +15,8 @@ const TopicViewer: React.FC = () => {
 
   useEffect(() => {
     if (isConnected) {
-      // Add handler for topic list messages
       addMessageHandler("topic_list", (data) => {
-        setTopics(data);
+        setTopics(data.data);
       });
 
       // Request topics
@@ -25,7 +24,9 @@ const TopicViewer: React.FC = () => {
     }
 
     return () => {
-      removeMessageHandler("topic_list");
+      removeMessageHandler("topic_list", (data) => {
+        setTopics([]);
+      });
     };
   }, [isConnected, addMessageHandler, removeMessageHandler, sendMessage]);
 
@@ -34,22 +35,19 @@ const TopicViewer: React.FC = () => {
       sendMessage({ type: "subscribe", topic: topicName });
     }
   };
+  console.log();
 
   return (
     <div className="topic-viewer">
       <h3>ROS2 Topics</h3>
-      <select
-        name="topics"
-        id="topics"
-        onChange={(e) => handleTopicSelect(e.target.value)}
-      >
-        <option value="">Select a topic</option>
-        {topics.map((topic) => (
-          <option key={topic.name} value={topic.name}>
-            {topic.name} ({topic.type})
-          </option>
+
+      <ul>
+        {topics.map((topic, index) => (
+          <p key={index}>
+            <strong>{topic.name}</strong> - <em>{topic.type}</em>
+          </p>
         ))}
-      </select>
+      </ul>
     </div>
   );
 };

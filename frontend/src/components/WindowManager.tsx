@@ -8,23 +8,23 @@ const WindowManager: React.FC = () => {
 
   return (
     <div style={{ position: "relative", height: "100%", overflow: "hidden" }}>
-      {Object.entries(openWindows).map(([id, position]) => {
-        const app = microApps.find((app) => app.id === id);
+      {openWindows.map((window) => {
+        const app = microApps.find((app) => app.id === window.appId);
         if (!app) return null;
 
         const AppComponent = app.component;
 
         return (
           <FloatingWindow
-            key={id}
-            id={id}
+            key={window.id}
+            id={window.id}
             title={app.title}
             width={app.width}
             height={app.height}
-            initialPosition={position}
-            onClose={() => removeWindow(id)}
+            initialPosition={window.position}
+            onClose={() => removeWindow(window.id)}
           >
-            <AppComponent />
+            <AppComponent instanceId={window.id} />
           </FloatingWindow>
         );
       })}

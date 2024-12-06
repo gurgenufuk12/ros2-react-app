@@ -1,19 +1,17 @@
 /* src/styles/TopicViewer.css */
 .topic-viewer {
-  padding: 1rem;
   background: white;
   border-radius: 4px;
   margin-top: 1rem;
 }
 
-.topic-viewer table {
+.topic-viewer p {
   width: 100%;
+  text-align: left;
   border-collapse: collapse;
 }
-
-.topic-viewer th,
-.topic-viewer td {
-  padding: 0.5rem;
-  text-align: left;
-  border-bottom: 1px solid #eee;
+.topic-viewer ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }

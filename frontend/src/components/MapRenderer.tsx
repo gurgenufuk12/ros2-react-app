@@ -7,16 +7,22 @@ import * as THREE from "three";
 
 interface MapRendererProps {
   mapData: {
-    width: number;
-    height: number;
-    resolution: number;
-    data: number[];
+    data: {
+      width: number;
+      height: number;
+      resolution: number;
+      origin: {
+        position: { x: number; y: number; z: number };
+        orientation: { x: number; y: number; z: number; w: number };
+      };
+      data: number[];
+    };
   };
   robotPose: Pose | null;
 }
 
 const MapRenderer: React.FC<MapRendererProps> = ({ mapData, robotPose }) => {
-  const { width, height, resolution, data } = mapData;
+  const { width, height, resolution, data } = mapData.data;
 
   const mapOffsetX = (width * resolution) / 2;
   const mapOffsetY = (height * resolution) / 2;
@@ -26,9 +32,9 @@ const MapRenderer: React.FC<MapRendererProps> = ({ mapData, robotPose }) => {
 
     useFrame(() => {
       if (meshRef.current && pose) {
-        const robotX = pose.pose.position.x;
-        const robotY = pose.pose.position.y;
-        const robotTheta = pose.pose.orientation.z;
+        const robotX = pose.data.pose.position.x;
+        const robotY = pose.data.pose.position.y;
+        const robotTheta = pose.data.pose.orientation.z;
 
         // meshRef.current.position.set(robotX, 0.5, robotY);
         meshRef.current.rotation.set(0, -robotTheta, 0);
