@@ -3,16 +3,10 @@ import { useWebSocket } from "../contexts/WebSocketContext";
 import { WindowComponentProps } from "../types/ComponentProps";
 import "../styles/TopicSubscriber.css";
 
-const DefaultTopics = [
-  {
-    topicName: "/tf",
-    msgType: "tf2_msgs/msg/TFMessage",
-  },
-  {
-    topicName: "/odom",
-    msgType: "nav_msgs/msg/Odometry",
-  },
-];
+interface Topic {
+  name: string;
+  type: string;
+}
 
 const TopicSubscriber: React.FC<WindowComponentProps> = ({ instanceId }) => {
   const [topicName, setTopicName] = useState("");
@@ -20,6 +14,7 @@ const TopicSubscriber: React.FC<WindowComponentProps> = ({ instanceId }) => {
   const [subscribedTopics, setSubscribedTopics] = useState<Set<string>>(
     new Set()
   );
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [topicData, setTopicData] = useState<Record<string, any>>({});
   const { isConnected, sendMessage, addMessageHandler, removeMessageHandler } =
     useWebSocket();
@@ -62,6 +57,22 @@ const TopicSubscriber: React.FC<WindowComponentProps> = ({ instanceId }) => {
     };
   }, [instanceId, addMessageHandler, removeMessageHandler]);
 
+  useEffect(() => {
+    if (isConnected) {
+      addMessageHandler("topic_list", (data) => {
+        setTopics(data.data);
+      });
+
+      // Request topics
+      sendMessage({ type: "get_topics" });
+    }
+
+    return () => {
+      removeMessageHandler("topic_list", (data) => {
+        setTopics([]);
+      });
+    };
+  }, [isConnected, addMessageHandler, removeMessageHandler, sendMessage]);
   const handleSubscribe = () => {
     if (isConnected && topicName && msgType) {
       // console.log(`[${instanceId}] Subscribing to topic:`, topicName);
@@ -119,20 +130,19 @@ const TopicSubscriber: React.FC<WindowComponentProps> = ({ instanceId }) => {
       <div className="select-group">
         Choose from Default Topics:
         <select
-          value={topicName}
           onChange={(e) => {
-            setTopicName(e.target.value);
-            setMsgType(
-              DefaultTopics.find((topic) => topic.topicName === e.target.value)
-                ?.msgType || ""
-            );
+            const topicName = e.target.value;
+            const topic = topics.find((t) => t.name === topicName);
+            if (topic) {
+              setTopicName(topic.name);
+              setMsgType(topic.type);
+            }
           }}
         >
-          <option value="">Select Topic</option>
-
-          {DefaultTopics.map(({ topicName }) => (
-            <option key={topicName} value={topicName}>
-              {topicName}
+          <option value="">Select a topic</option>
+          {topics.map((topic, index) => (
+            <option key={index} value={topic.name}>
+              {topic.name}
             </option>
           ))}
         </select>
