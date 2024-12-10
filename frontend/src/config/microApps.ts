@@ -17,6 +17,7 @@ export const microApps: MicroApp[] = [
     width: 800,
     height: 600,
     component: Map,
+    allowMultiple: false,
   },
   {
     id: "controls",
@@ -25,6 +26,7 @@ export const microApps: MicroApp[] = [
     width: 500,
     height: 600,
     component: Controls,
+    allowMultiple: false,
   },
   {
     id: "odom",
@@ -33,6 +35,7 @@ export const microApps: MicroApp[] = [
     width: 500,
     height: 900,
     component: OdomListener,
+    allowMultiple: false,
   },
   {
     id: "topics",
@@ -41,6 +44,7 @@ export const microApps: MicroApp[] = [
     width: 500,
     height: 800,
     component: TopicViewer,
+    allowMultiple: false,
   },
   {
     id: "topic-subscriber",

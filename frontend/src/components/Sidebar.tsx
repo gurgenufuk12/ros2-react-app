@@ -13,17 +13,26 @@ import { microApps } from "../config/microApps";
 import { useWindowStore } from "../stores/windowStore";
 
 const StyledDrawer = styled(Drawer)(({ theme }) => ({
-  width: 280,
-  flexShrink: 0,
-  ":hover": {
-    cursor: "pointer",
+  "@media (max-width: 600px)": {
+    width: 240,
+    flexShrink: 0,
   },
   "& .MuiDrawer-paper": {
-    width: 280,
+    width: 100,
     boxSizing: "border-box",
     backgroundColor: theme.palette.background.paper,
     borderRight: "none",
     boxShadow: theme.shadows[2],
+    "& .MuiListItemText-primary": {
+      display: "none",
+    },
+    ":hover": {
+      width: 280,
+      cursor: "pointer",
+      "& .MuiListItemText-primary": {
+        display: "block",
+      },
+    },
   },
 }));
 
@@ -52,17 +61,12 @@ const Sidebar: React.FC = () => {
     <StyledDrawer variant="permanent">
       <Logo>
         <Typography variant="h6" color="primary" fontWeight="bold">
-          ROS2 Control Panel
+          Panel
         </Typography>
       </Logo>
       <List>
         {microApps.map((app) => (
-          <StyledListItem
-            key={app.id}
-            onClick={() =>
-              addWindow(app.id)
-            }
-          >
+          <StyledListItem key={app.id} onClick={() => addWindow(app.id)}>
             <ListItemIcon sx={{ minWidth: 40 }}>
               <app.icon />
             </ListItemIcon>

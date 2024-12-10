@@ -1,9 +1,8 @@
-// MapRenderer.tsx
-import React, { useRef } from "react";
+import React from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Pose } from "../types/Pose";
-import * as THREE from "three";
+import Robot from "./Robot";
 
 interface MapRendererProps {
   mapData: {
@@ -26,34 +25,6 @@ const MapRenderer: React.FC<MapRendererProps> = ({ mapData, robotPose }) => {
 
   const mapOffsetX = (width * resolution) / 2;
   const mapOffsetY = (height * resolution) / 2;
-
-  const Robot = ({ pose }: { pose: Pose }) => {
-    const meshRef = useRef<THREE.Mesh>(null);
-
-    useFrame(() => {
-      if (meshRef.current && pose) {
-        const robotX = pose.data.pose.position.x;
-        const robotY = pose.data.pose.position.y;
-        const robotTheta = pose.data.pose.orientation.z;
-
-        // meshRef.current.position.set(robotX, 0.5, robotY);
-        meshRef.current.rotation.set(0, -robotTheta, 0);
-      }
-    });
-
-    return (
-      <group>
-        <mesh ref={meshRef}>
-          <cylinderGeometry args={[0.15, 0.15, 0.2]} />{" "}
-          <meshStandardMaterial color="red" />
-        </mesh>
-        {/* <mesh position={[0, 0.5, 0.4]}>
-          <boxGeometry args={[0.1, 0.1, 0.2]} />
-          <meshStandardMaterial color="blue" />
-        </mesh> */}
-      </group>
-    );
-  };
 
   const GridCells = () => {
     const cells = [];
