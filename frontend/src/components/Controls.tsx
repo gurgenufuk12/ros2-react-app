@@ -2,9 +2,12 @@ import React, { useState, useRef } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { Joystick } from "react-joystick-component";
 import "../styles/Controls.css";
+import VelocityGraph from "./VelocityGraph";
+
 const Controls: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { ws, isConnected } = useWebSocket();
+  const [showGraph, setShowGraph] = useState(false);
   const linearVelocityRef = useRef(0);
   const angularVelocityRef = useRef(0);
   const [linearVelocity, setLinearVelocity] = useState(0);
@@ -66,7 +69,7 @@ const Controls: React.FC = () => {
         },
       };
       ws.send(JSON.stringify(message));
-      console.log("Command sent:", message);
+      // console.log("Command sent:", message);
     } else {
       console.log("WebSocket is not connected.");
     }
@@ -74,18 +77,31 @@ const Controls: React.FC = () => {
 
   return (
     <div className="controls-container">
-      <span>Lineer Velocity :{linearVelocity}</span>
-      <span>Angular Velocity :{angularVelocity}</span>
+      <div className="joystick-section">
+        <Joystick
+          size={250}
+          baseColor="#EEEEEE"
+          stickColor="#BBBBBB"
+          move={handleMove}
+          start={handleStart}
+          stop={handleStop}
+        />
+        <button
+          className={`graph-toggle ${showGraph ? "active" : ""}`}
+          onClick={() => setShowGraph(!showGraph)}
+        >
+          {showGraph ? "Hide Velocity Graph" : "Show Velocity Graph"}
+        </button>
+      </div>
 
-      <Joystick
-        size={250}
-        baseColor="#EEEEEE"
-        stickColor="#BBBBBB"
-        move={handleMove}
-        start={handleStart}
-        stop={handleStop}
-      />
-      <p>{isConnected ? "Connected to WebSocket" : "Disconnected"}</p>
+      {showGraph && (
+        <div className="graph-container">
+          <VelocityGraph
+            linearVelocity={linearVelocity}
+            angularVelocity={angularVelocity}
+          />
+        </div>
+      )}
     </div>
   );
 };
