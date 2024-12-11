@@ -1,8 +1,58 @@
 .controls-container {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+}
+.controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.joystick-section {
+  display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100%; /* Ensure it fills the parent container */
-  gap: 2rem;
+  gap: 20px;
+}
+.note {
+  display: flex;
+  gap: 10px;
+  color: #007bff;
+}
+.graph-toggle {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.graph-toggle:hover {
+  background-color: #0056b3;
+}
+
+.graph-toggle.active {
+  background-color: #dc3545;
+}
+
+.graph-container {
+  width: 100%;
+  max-width: 800px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

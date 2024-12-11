@@ -23,7 +23,7 @@ export const microApps: MicroApp[] = [
     id: "controls",
     title: "Robot Controls",
     icon: SportsEsportsIcon,
-    width: 500,
+    width: 1000,
     height: 600,
     component: Controls,
     allowMultiple: false,
