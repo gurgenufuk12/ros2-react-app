@@ -75,6 +75,10 @@ const TopicSubscriber: React.FC<WindowComponentProps> = ({ instanceId }) => {
     };
   }, [isConnected, addMessageHandler, removeMessageHandler, sendMessage]);
   const handleSubscribe = () => {
+    if (!msgType || !topicName) {
+      //CHANGE LATER
+      return alert("fill the selected areas");
+    }
     if (isConnected && topicName && msgType) {
       // console.log(`[${instanceId}] Subscribing to topic:`, topicName);
       sendMessage({
