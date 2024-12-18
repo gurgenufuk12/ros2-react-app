@@ -14,6 +14,7 @@ const TopicSubscriber: React.FC<WindowComponentProps> = ({ instanceId }) => {
   const [subscribedTopics, setSubscribedTopics] = useState<Set<string>>(
     new Set()
   );
+  const [showInputs, setShowInputs] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [topicData, setTopicData] = useState<Record<string, any>>({});
   const { isConnected, sendMessage, addMessageHandler, removeMessageHandler } =
@@ -74,6 +75,10 @@ const TopicSubscriber: React.FC<WindowComponentProps> = ({ instanceId }) => {
     };
   }, [isConnected, addMessageHandler, removeMessageHandler, sendMessage]);
   const handleSubscribe = () => {
+    if (!msgType || !topicName) {
+      //CHANGE LATER
+      return alert("fill the selected areas");
+    }
     if (isConnected && topicName && msgType) {
       // console.log(`[${instanceId}] Subscribing to topic:`, topicName);
       sendMessage({
@@ -84,6 +89,9 @@ const TopicSubscriber: React.FC<WindowComponentProps> = ({ instanceId }) => {
       });
 
       setSubscribedTopics((prev) => new Set(prev).add(topicName));
+    }
+    if (topicName !== "" && msgType !== "") {
+      setShowInputs(false);
     }
   };
 
@@ -108,25 +116,28 @@ const TopicSubscriber: React.FC<WindowComponentProps> = ({ instanceId }) => {
         return next;
       });
     }
+    setShowInputs(true);
   };
 
   return (
     <div className="topic-subscriber">
-      <div className="input-group">
-        <input
-          type="text"
-          value={topicName}
-          onChange={(e) => setTopicName(e.target.value)}
-          placeholder="Topic name (e.g., /tf)"
-        />
-        <input
-          type="text"
-          value={msgType}
-          onChange={(e) => setMsgType(e.target.value)}
-          placeholder="Message type (e.g., tf2_msgs/msg/TFMessage)"
-        />
-        <button onClick={handleSubscribe}>Subscribe</button>
-      </div>
+      {showInputs ? (
+        <div className="input-group">
+          <input
+            type="text"
+            value={topicName}
+            onChange={(e) => setTopicName(e.target.value)}
+            placeholder="Topic name (e.g., /tf)"
+          />
+          <input
+            type="text"
+            value={msgType}
+            onChange={(e) => setMsgType(e.target.value)}
+            placeholder="Message type (e.g., tf2_msgs/msg/TFMessage)"
+          />
+          <button onClick={handleSubscribe}>Subscribe</button>
+        </div>
+      ) : null}
       <div className="select-group">
         Choose from Default Topics:
         <select

@@ -18,9 +18,9 @@ const Robot = ({ pose }: { pose: Pose }) => {
       const robotTheta = poseRef.current.data.pose.orientation.z;
 
       //scale ne olmalı?
-        const scale = 1;
+        const scale = 0.85
 
-      meshRef.current.position.set(robotX * scale, 0, robotZ * scale);
+      meshRef.current.position.set(robotX * scale, 0, -robotZ * scale);
       meshRef.current.rotation.set(0, robotTheta, 0); // Rotasyonu düzeltin
     }
   });
