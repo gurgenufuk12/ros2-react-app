@@ -20,11 +20,18 @@ interface MapRendererProps {
   robotPose: Pose | null;
 }
 
+// MapRenderer.tsx
 const MapRenderer: React.FC<MapRendererProps> = ({ mapData, robotPose }) => {
   const { width, height, resolution, data } = mapData.data;
+  console.log("🚀 ~ resolution:", resolution);
 
-  const mapOffsetX = (width * resolution) / 2;
-  const mapOffsetY = (height * resolution) / 2;
+  // Calculate map dimensions and center
+  const mapWidth = width * resolution;
+  const mapHeight = height * resolution;
+  const mapCenterX = mapWidth / 2;
+  console.log("🚀 ~ mapCenterX:", mapCenterX)
+  const mapCenterZ = mapHeight / 2;
+  
 
   const GridCells = () => {
     const cells = [];
@@ -35,8 +42,9 @@ const MapRenderer: React.FC<MapRendererProps> = ({ mapData, robotPose }) => {
         const value = data[index];
 
         if (value > 50) {
-          const worldX = x * resolution - mapOffsetX;
-          const worldZ = y * resolution - mapOffsetY;
+          // Position cells relative to map center
+          const worldX = x * resolution - mapCenterX;
+          const worldZ = y * resolution - mapCenterZ;
 
           cells.push(
             <mesh key={`cell-${x}-${y}`} position={[worldX, 0, worldZ]}>
@@ -54,16 +62,21 @@ const MapRenderer: React.FC<MapRendererProps> = ({ mapData, robotPose }) => {
     <div style={{ width: "100%", height: "100%" }}>
       <Canvas
         camera={{
-          position: [0, 50, 50],
-          fov: 75,
+          position: [0, mapHeight, mapHeight / 2], // Position camera above map center
+          fov: 50,
+          near: 0.1,
+          far: mapHeight * 3,
         }}
       >
         <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
+        <pointLight position={[mapWidth / 2, mapHeight, mapWidth / 2]} />
         <GridCells />
         {robotPose && <Robot pose={robotPose} />}
-        <OrbitControls />
-        <gridHelper args={[50, 50]} />
+        <OrbitControls target={[0, 0, 0]} /> {/* Look at map center */}
+        <gridHelper
+          args={[Math.max(mapWidth, mapHeight), 50]}
+          position={[0, -0.1, 0]}
+        />
       </Canvas>
     </div>
   );
